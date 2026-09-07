@@ -33,16 +33,19 @@ export const Popup = (props: PopupProps) => {
 
     React.useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
-            if (event.key !== 'Escape') {
+            if (event.key !== 'Escape' || event.isComposing || !onClose) {
                 return;
             }
             event.preventDefault();
             event.stopPropagation();
-            if (document.activeElement !== dialogRef.current) {
+            if (event.repeat) {
+                return;
+            }
+            if (!dialogRef.current?.contains(document.activeElement)) {
                 dialogRef.current?.focus();
                 return;
             }
-            onClose?.();
+            onClose();
         };
         document.addEventListener('keydown', handleEscape, true);
         return () => document.removeEventListener('keydown', handleEscape, true);

@@ -40,13 +40,44 @@ test('dismisses a popup before its sliding panel', async () => {
     expect(dialog).toHaveFocus();
     expect(document.querySelector('.sliding-panel')).toHaveClass('sliding-panel--opened');
 
-    fireEvent.keyDown(dialog, {key: 'Escape', keyCode: 27});
+    fireEvent.keyDown(dialog, {key: 'Escape', keyCode: 27, repeat: true});
+    expect(dialog).toBeInTheDocument();
+    expect(onResult).not.toHaveBeenCalled();
+    fireEvent.keyUp(dialog, {key: 'Escape', keyCode: 27});
+
+    const input = screen.getByRole('textbox', {name: 'Resource name'});
+    input.focus();
+    fireEvent.keyDown(input, {key: 'Escape', keyCode: 27});
+
     expect(dialog).not.toBeInTheDocument();
     await waitFor(() => expect(onResult).toHaveBeenCalledWith(null));
+    expect(onResult).toHaveBeenCalledTimes(1);
     const panelBody = document.querySelector<HTMLElement>('.sliding-panel__body');
     expect(panelBody).toHaveFocus();
     expect(document.querySelector('.sliding-panel')).toHaveClass('sliding-panel--opened');
 
+    fireEvent.keyDown(panelBody!, {key: 'Escape', keyCode: 27, repeat: true});
+    expect(document.querySelector('.sliding-panel')).toHaveClass('sliding-panel--opened');
+    fireEvent.keyUp(panelBody!, {key: 'Escape', keyCode: 27});
+
     fireEvent.keyDown(panelBody!, {key: 'Escape', keyCode: 27});
     expect(document.querySelector('.sliding-panel')).not.toHaveClass('sliding-panel--opened');
+});
+
+test('does not consume Escape when onClose is not provided', () => {
+    const closePanel = jest.fn();
+    render(<>
+        <SlidingPanel isShown={true} onClose={closePanel}>Panel</SlidingPanel>
+        <Popup title='Notice'>Content</Popup>
+    </>);
+
+    const dialog = screen.getByRole('dialog', {name: 'Notice'});
+    dialog.focus();
+    expect(fireEvent.keyDown(dialog, {key: 'Escape', keyCode: 27})).toBe(true);
+
+    const panelBody = document.querySelector<HTMLElement>('.sliding-panel__body');
+    panelBody!.focus();
+    fireEvent.keyDown(panelBody!, {key: 'Escape', keyCode: 27});
+
+    expect(closePanel).toHaveBeenCalledTimes(1);
 });
