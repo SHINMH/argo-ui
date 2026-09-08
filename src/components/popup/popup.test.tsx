@@ -66,18 +66,20 @@ test('dismisses a popup before its sliding panel', async () => {
 
 test('does not consume Escape when onClose is not provided', () => {
     const closePanel = jest.fn();
-    render(<>
-        <SlidingPanel isShown={true} onClose={closePanel}>Panel</SlidingPanel>
+    const panel = <SlidingPanel isShown={true} onClose={closePanel}>Panel</SlidingPanel>;
+    const {rerender} = render(<>{panel}</>);
+    const previouslyFocused = document.activeElement;
+
+    rerender(<>
+        {panel}
         <Popup title='Notice'>Content</Popup>
     </>);
+
+    expect(previouslyFocused).toHaveFocus();
+    fireEvent.keyDown(document.activeElement!, {key: 'Escape', keyCode: 27});
+    expect(closePanel).toHaveBeenCalledTimes(1);
 
     const dialog = screen.getByRole('dialog', {name: 'Notice'});
     dialog.focus();
     expect(fireEvent.keyDown(dialog, {key: 'Escape', keyCode: 27})).toBe(true);
-
-    const panelBody = document.querySelector<HTMLElement>('.sliding-panel__body');
-    panelBody!.focus();
-    fireEvent.keyDown(panelBody!, {key: 'Escape', keyCode: 27});
-
-    expect(closePanel).toHaveBeenCalledTimes(1);
 });

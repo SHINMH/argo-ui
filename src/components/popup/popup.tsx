@@ -21,15 +21,19 @@ require('./popup.scss');
 
 export const Popup = (props: PopupProps) => {
     const {onClose} = props;
+    const canClose = !!onClose;
     const dialogRef = React.useRef<HTMLDivElement>(null);
     const titleId = React.useId();
 
     React.useLayoutEffect(() => {
+        if (!canClose) {
+            return;
+        }
         const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         const restoreFocus = previouslyFocused?.closest('.sliding-panel--opened')?.querySelector<HTMLElement>('.sliding-panel__body') ?? previouslyFocused;
         dialogRef.current?.focus();
         return () => restoreFocus?.isConnected && restoreFocus.focus();
-    }, []);
+    }, [canClose]);
 
     React.useEffect(() => {
         const handleEscape = (event: KeyboardEvent) => {
